@@ -25,6 +25,7 @@ var (
 
 func (s *server) SortData(_ context.Context, in *pb.DataSet) (*pb.DataSet, error) {
 
+	//if all mappers have sent their data proceed with sorting, otherwise just append mapper's data
 	count++
 
 	for _, v := range in.GetValues() {
@@ -48,32 +49,33 @@ func (s *server) SortData(_ context.Context, in *pb.DataSet) (*pb.DataSet, error
 }
 
 func printOutFile(numbers []int32) {
-	filename := portInfo + ".json"
+	//print service result into a file json
+	filename := "reducer" + portInfo + ".json"
 
 	file, err := os.Create(filename)
 	if err != nil {
-		fmt.Printf("Errore nella creazione del file: %v\n", err)
+		fmt.Printf("Error creating file: %v\n", err)
 		return
 	}
 	defer file.Close()
 
 	jsonData, err := json.Marshal(numbers)
 	if err != nil {
-		fmt.Printf("Errore nella conversione in JSON: %v\n", err)
+		fmt.Printf("Error marshaling json data: %v\n", err)
 		return
 	}
 
 	_, err = file.Write(jsonData)
 	if err != nil {
-		fmt.Printf("Errore nella scrittura del file JSON: %v\n", err)
+		fmt.Printf("Error writing json file: %v\n", err)
 		return
 	}
 
-	fmt.Printf("File JSON '%s' creato con successo.\n", filename)
+	fmt.Printf("File json '%s' created successfully\n", filename)
 }
 
 func main() {
-	//check mapper port and number of reducers
+	//check reducer port
 	port := flag.String("port", "50051", "Reducer port.")
 	flag.Parse()
 	portInfo = *port

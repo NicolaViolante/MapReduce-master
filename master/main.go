@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"google.golang.org/grpc/credentials/insecure"
 	"io/ioutil"
 	"log"
 	"os"
@@ -47,21 +48,21 @@ func main() {
 	// read data and decode them into a map
 	bytes, err := ioutil.ReadAll(file)
 	if err != nil {
-		log.Fatalf("Errore durante la lettura del file: %v", err)
+		log.Fatalf("Error reading file json: %v", err)
 	}
 
 	var data map[string]string
 	err = json.Unmarshal(bytes, &data)
 	if err != nil {
-		log.Fatalf("Errore durante la decodifica del JSON: %v", err)
+		log.Fatalf("Error decoding file json: %v", err)
 	}
 
 	//launch two go routines (implement concurrency) in which master connects to mappers
 	//and send them the data to sort
-	//In order to avoid an early termination of the process master use wait groups
+	//In order to avoid an early termination of the process, master uses wait group
 	var wg sync.WaitGroup
 
-	wg.Add(2) //add # of mappers that will be launched
+	wg.Add(2)
 
 	for i := 0; i < 2; i++ {
 
@@ -78,28 +79,21 @@ func main() {
 				return
 			}
 
-			// Set up a connection to the server.
-			// Unsecured connection between client and server
-			conn, err := grpc.Dial(address, grpc.WithInsecure())
+			// Set up a connection to the server
+			conn, err := grpc.NewClient(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 			if err != nil {
 				log.Fatalf("Connection failed: %v", err)
 			}
 			defer conn.Close() // Close the connection when everything is done.
 
-			// Pass the connection and create a client stub instance.
-			// It contains all the remote methods to invoke the server.
+			// Pass the connection and create a client stub instance
 			c := pb.NewMapReduceClient(conn)
 
 			// Create a Context to pass with the remote call.
-			// Context object contains metadata (identity of end user, authorization
-			// tokens and request deadline) and will exist during the lifetime
-			// of the request.
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
 
-			// Call addProduct method with product details.
-			// addProduct returns a product ID if the action completed successfully.
-			// Otherwise it returns an error.
+			// Call SortData method
 			_, err = c.SortData(ctx, &pb.DataSet{Values: slices[index]})
 			if err != nil {
 				log.Fatalf("Could not sort data: %v", err)
