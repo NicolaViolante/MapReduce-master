@@ -1,0 +1,6 @@
+{
+  "addrMapper0": "localhost:50051",
+  "addrMapper1": "localhost:50052",
+  "addrReducer0": "localhost:50053",
+  "addrReducer1": "localhost:50054"
+}

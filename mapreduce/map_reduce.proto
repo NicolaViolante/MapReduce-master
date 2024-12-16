@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+option go_package = "MapReduce/mapreduce";
+
+package mapreduce;
+
+service MapReduce{
+  rpc SortData(DataSet) returns (DataSet);
+}
+
+message DataSet {
+  repeated int32 values = 1;
+}
+
